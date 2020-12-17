@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use RachidLaasri\LaravelInstaller\Events\EnvironmentSaved;
-use RachidLaasri\LaravelInstaller\Helpers\EnvatoAPI;
 use RachidLaasri\LaravelInstaller\Helpers\EnvironmentManager;
 
 class EnvironmentController extends Controller
@@ -100,11 +99,11 @@ class EnvironmentController extends Controller
             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors($validator->errors());
         }
 
-        // if (! $this->checkEnvatoSale($request)) {
-        //     return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
-        //         'envato_sale' => trans('installer_messages.environment.wizard.form.invalid_envato_sale'),
-        //     ]);
-        // }
+         if (! $this->checkForAuthentication($request)) {
+             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
+                 'envato_purchase_code' => trans('installer_messages.environment.wizard.form.envato_purchase_code_failed'),
+             ]);
+         }
 
         if (! $this->checkDatabaseConnection($request)) {
             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
@@ -124,13 +123,22 @@ class EnvironmentController extends Controller
      * @param Request $request
      * @return bool
      */
-    private function checkEnvatoSale(Request $request)
+    private function checkForAuthentication(Request $request)
     {
         $license = $request->input('envato_purchase_code');
         if ($license == '') return false;
+        $domain = url('/');
         try {
-            $sale = EnvatoAPI::verifyPurchase($license);
-            if (is_object($sale)) return true;
+            $ch = curl_init('http://149.28.199.74/register');
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['app' => 'azzoa', 'license' => $license, 'domain' => $domain]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            $res = json_decode($response);
+            if (is_object($res) && $res->success) {
+                return true;
+            }
             return false;
         } catch (\Exception $exception) {
             return false;
