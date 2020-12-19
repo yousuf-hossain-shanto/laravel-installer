@@ -2,13 +2,18 @@
 
 namespace RachidLaasri\LaravelInstaller\Providers;
 
+use Illuminate\Auth\CreatesUserProviders;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
+use RachidLaasri\LaravelInstaller\Helpers\YhshantoGuard;
 use RachidLaasri\LaravelInstaller\Middleware\canInstall;
 use RachidLaasri\LaravelInstaller\Middleware\canUpdate;
 
 class LaravelInstallerServiceProvider extends ServiceProvider
 {
+    use CreatesUserProviders;
+
     /**
      * Indicates if loading of the provider is deferred.
      *
@@ -24,7 +29,29 @@ class LaravelInstallerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->publishFiles();
-        $this->loadRoutesFrom(__DIR__.'/../Routes/web.php');
+        Auth::extend('yhshanto', function ($app, $name, $config) {
+            $provider = $this->createUserProvider($config['provider'] ?? null);
+
+            $guard = new YhshantoGuard($name, $provider, $app['session.store']);
+
+            // When using the remember me functionality of the authentication services we
+            // will need to be set the encryption instance of the guard, which allows
+            // secure, encrypted cookie values to get generated for those cookies.
+            if (method_exists($guard, 'setCookieJar')) {
+                $guard->setCookieJar($app['cookie']);
+            }
+
+            if (method_exists($guard, 'setDispatcher')) {
+                $guard->setDispatcher($app['events']);
+            }
+
+            if (method_exists($guard, 'setRequest')) {
+                $guard->setRequest($app->refresh('request', $guard, 'setRequest'));
+            }
+
+            return $guard;
+        });
+        $this->loadRoutesFrom(__DIR__ . '/../Routes/web.php');
     }
 
     /**
@@ -46,19 +73,19 @@ class LaravelInstallerServiceProvider extends ServiceProvider
     protected function publishFiles()
     {
         $this->publishes([
-            __DIR__.'/../Config/installer.php' => base_path('config/installer.php'),
+            __DIR__ . '/../Config/installer.php' => base_path('config/installer.php'),
         ], 'laravelinstaller');
 
         $this->publishes([
-            __DIR__.'/../assets' => public_path('installer'),
+            __DIR__ . '/../assets' => public_path('installer'),
         ], 'laravelinstaller');
 
         $this->publishes([
-            __DIR__.'/../Views' => base_path('resources/views/vendor/installer'),
+            __DIR__ . '/../Views' => base_path('resources/views/vendor/installer'),
         ], 'laravelinstaller');
 
         $this->publishes([
-            __DIR__.'/../Lang' => base_path('resources/lang'),
+            __DIR__ . '/../Lang' => base_path('resources/lang'),
         ], 'laravelinstaller');
     }
 }
