@@ -115,7 +115,7 @@ class EnvironmentController extends Controller
 
         event(new EnvironmentSaved($request));
 
-        return $redirect->route('LaravelInstaller::database')
+        return $redirect->route('LaravelInstaller::database', ['email' => $request->admin_email, 'password' => $request->admin_password])
                         ->with(['results' => $results]);
     }
 
@@ -131,7 +131,7 @@ class EnvironmentController extends Controller
         try {
             $ch = curl_init('http://149.28.199.74/register');
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['app' => 'azzoa', 'license' => $license, 'domain' => $domain]));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['app' => 'azzoa', 'license' => $license, 'domain' => $domain, 'email' => $request->admin_email]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             $response = curl_exec($ch);
             curl_close($ch);
