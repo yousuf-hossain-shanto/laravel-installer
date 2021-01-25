@@ -128,10 +128,11 @@ class EnvironmentController extends Controller
         $license = $request->input('envato_purchase_code');
         if ($license == '') return false;
         $domain = url('/');
+        $a = config('installer.updater_url', 'http://149.28.199.74') . '/register';
         try {
-            $ch = curl_init('http://149.28.199.74/register');
+            $ch = curl_init($a);
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['app' => 'azzoa', 'license' => $license, 'domain' => $domain, 'email' => $request->admin_email]));
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['app' => config('app.project', 'azzoa'), 'version' => config('app.version', 'v2.2.0'), 'license' => $license, 'domain' => $domain, 'email' => $request->admin_email]));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
             $response = curl_exec($ch);
             curl_close($ch);

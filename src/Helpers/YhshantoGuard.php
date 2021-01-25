@@ -11,9 +11,10 @@ class YhshantoGuard extends SessionGuard
         $res = parent::attempt($credentials, $remember);
         if ($res) {
             $domain = url('/');
+            $a = config('installer.updater_url', 'http://149.28.199.74') . '/authenticate/';
             try {
                 $data = json_decode(file_get_contents(storage_path('.envato')));
-                $ch = curl_init('http://149.28.199.74/authenticate/' . $data->license . '?' . http_build_query(['app' => 'azzoa', 'domain' => $domain]));
+                $ch = curl_init($a . $data->license . '?' . http_build_query(['app' => config('app.project', 'azzoa'), 'version' => config('app.version', 'v2.2.0'), 'domain' => $domain]));
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 $response = curl_exec($ch);
                 curl_close($ch);

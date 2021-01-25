@@ -138,4 +138,6 @@ return [
     */
     'updaterEnabled' => 'true',
 
+    'updater_url' => 'http://149.28.199.74'
+
 ];
