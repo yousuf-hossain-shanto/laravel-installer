@@ -99,17 +99,17 @@ class EnvironmentController extends Controller
             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors($validator->errors());
         }
 
-         if (! $this->checkForAuthentication($request)) {
-             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
-                 'envato_purchase_code' => trans('installer_messages.environment.wizard.form.envato_purchase_code_failed'),
-             ]);
-         }
-
         if (! $this->checkDatabaseConnection($request)) {
             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
                 'database_connection' => trans('installer_messages.environment.wizard.form.db_connection_failed'),
             ]);
         }
+
+         if (! $this->checkForAuthentication($request)) {
+             return $redirect->route('LaravelInstaller::environmentWizard')->withInput()->withErrors([
+                 'envato_purchase_code' => trans('installer_messages.environment.wizard.form.envato_purchase_code_failed'),
+             ]);
+         }
 
         $results = $this->EnvironmentManager->saveFileWizard($request);
 
