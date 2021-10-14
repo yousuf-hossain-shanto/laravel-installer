@@ -2,11 +2,11 @@
 
 namespace RachidLaasri\LaravelInstaller\Controllers;
 
-use App\Models\Staff;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
 use RachidLaasri\LaravelInstaller\Helpers\DatabaseManager;
+use RachidLaasri\LaravelInstaller\Events\AddingInstallerSuperAdmin;
 
 class DatabaseController extends Controller
 {
@@ -33,17 +33,7 @@ class DatabaseController extends Controller
     public function database(Request $request)
     {
         $response = $this->databaseManager->migrateAndSeed();
-        try {
-            if ($request->email && $request->password) {
-                Staff::query()->create([
-                    'role_id' => null,
-                    'name' => 'Super Admin',
-                    'email' => $request->email,
-                    'phone' => null,
-                    'password' => Hash::make($request->password)
-                ]);
-            }
-        } catch (\Exception $exception) {}
+        event(new AddingInstallerSuperAdmin($request));
         return redirect()->route('LaravelInstaller::final')
                          ->with(['message' => $response]);
     }
